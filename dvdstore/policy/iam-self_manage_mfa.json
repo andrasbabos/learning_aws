@@ -6,7 +6,6 @@
             "Effect": "Allow",
             "Action": [
                 "iam:GetAccountPasswordPolicy",
-                
                 "iam:ListVirtualMFADevices"
             ],
             "Resource": "*"
