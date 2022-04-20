@@ -2,20 +2,21 @@
 
 ## general information
 
-TODO
+This project is based on the Dell DVDStore application (https://github.com/dvdstore/ds3), it's purpose is to learn about AWS by installing the fictional company's web application like on premises then  migrate, rebuild it in a cloud aware way.
 
-- purpose, details of this project
-- choosing region, not free account aware
-- used files path in the example
+This project isn't planned to be AWS free tier compatible and tested in European regions (eu-north-1).
+
+The documentation is using aws cli whenever it's possible and it's tested on Mac OS or Linux with bash shell. If the steps performed on different setup then the bash shell specific parts needs to be replaced.
+
+The project is using the following tag whenever it's possible: Key=project,Value=dvdstore, as this is a learning project I'm not sure yet how will I use the tag.
 
 ## IAM setup
 
-TODO
+In the principle of least privilege the IAM setup is the following:
 
-- explanation, i do these steps with an admin user
-- describe the two security paths, the user rights are directly attached to groups, the project rights are available through assume role with mfa
+There is an administrator account (which isn't the root user) which only used to set up IAM permissions and related resources and there is a developer account which will interact with aws to build and manage the application. The permissions for the user are defined in a role and the user need to assume the necessary role to manage the application.
 
-The security concept is the following:
+The elements of security concept are the following:
 
 - admin user: this account is used to set up security policies in the aws account, the technical details of this user isn't part of this documentation but in general it have AdministratorAccess policy assigned. I will mention when something needed to do as an admin.
 - application policy: this policy defines the necessary permissions to deploy the applicaton (like create ec2, rds instances)
@@ -26,26 +27,35 @@ The security concept is the following:
 
 ### create general account permissions
 
-TODO general explanation about why they have password and access key
+Do these steps as administrator user.
+
+First step is to create the developer user and set up the self-management permissions for it.
 
 '''set environment variables'''
 
-TODO explanation about this variable, it's visible on the webconsole
+These variables are used in the examples below, it safe to simply replace the example commands with the values also.
 
 ```bash
 export AWS_ACCOUNT_ID="used aws account ID without dash characters"
 export AWS_USER="name of the user who will be the developer"
+export GIT_REPO_ROOT="the path to the root of the git repository in the file system"
 ```
 
 '''create policy'''
 
-TODO text, mfa, source: <https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_aws_my-sec-creds-self-manage.html>
+This policy will give the user the permission to set up it's own mfa device and manage own credentials (like password, access key) after successful authentication with mfa.
+
+Source documentation: <https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_aws_my-sec-creds-self-manage.html>
 
 ```bash
-aws iam create-policy --policy-name iam-self_manage_mfa --policy-document file://iam-self_manage_mfa.json --tags Key=project,Value=dvdstore
+aws iam create-policy --policy-name iam-self_manage_mfa --policy-document file://$GIT_REPO_ROOT/dvdstore/policy/iam-self_manage_mfa.json --tags Key=project,Value=dvdstore
 ```
 
 '''create group'''
+
+Policies are assigned to groups and users are in the groups where they need permissions as best practice.
+
+This group will include users which needs the self-management permissions.
 
 ```bash
 aws iam create-group --group-name iam-self_management
@@ -70,38 +80,66 @@ aws iam create-user --user-name $AWS_USER --tags Key=project,Value=dvdstore
 aws iam add-user-to-group --user-name $AWS_USER --group-name iam-self_management
 ```
 
-TODO set initial access key for user, user can set up own mfa through cli
+'''set initial access key for user'''
+
+Set initial access key for user, then hand it over him then he can set up mfa device for own account. With mfa the user can replace the access key, set up password, etc.
 
 ```bash
 aws iam create-access-key --user-name $AWS_USER
 ```
 
-hand over keys to user
+### set up own account
 
-### TODO meaningful text, set up new user account
+Do these steps as developer user.
 
-TODO short info about profile
+We suppose that the real person who uses the developer account have multiple aws users and use different profiles for these, not the default, for example:
+
+~/.aws/config
+
+```ini
+[profile learn_aws]
+region = eu-north-1
+output = table
+```
+
+~/.aws/credentials
+
+```ini
+[learn_aws]
+aws_access_key_id = ........
+aws_secret_access_key = ........
+```
+
+Here the access and secret key is the one provided by the administrator.
+
+It's possible to define the profile as command line parameter but it's very error prone so we set up as environment variable.
 
 ```bash
 export AWS_PROFILE=$AWS_USER
 aws iam get-user
 ```
 
-create own virtual mfa device
+create own virtual mfa device, this command will generate a picture file which whill contain the qr code. The user needs to import this into his own mfa application.
 
 ```bash
 aws iam create-virtual-mfa-device --virtual-mfa-device-name $AWS_USER --outfile mfa.png --bootstrap-method QRCodePNG --tags Key=project,Value=dvdstore
 ```
 
-enable it
+Enable the mfa device, the 2 authentication code parameters needs to be the actual and following token code from the mfa application.
 
 ```bash
 aws iam enable-mfa-device --user-name $AWS_USER --serial-number arn:aws:iam::$AWS_ACCOUNT_ID:mfa/$AWS_USER --authentication-code1 123456 --authentication-code2 789012
 ```
 
+Get a valid session token with the new mfa device, the token code is from the mfa application.
+
 ```bash
 aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::$AWS_ACCOUNT_ID:mfa/$AWS_USER --token-code 123456
 ```
+
+This will output the new access, secret key and session token which are mfa enabled and allows to use the self-management permissions.
+
+Export the values, these will take precedence over the defined values in the profile.
 
 ```bash
 export AWS_ACCESS_KEY_ID=...
@@ -109,21 +147,38 @@ export AWS_SECRET_ACCESS_KEY=...
 export AWS_SESSION_TOKEN=...
 ```
 
-test access with mfa key
+Test access with listing own access keys.
 
 ```bash
 aws iam list-access-keys
 ```
 
-aws iam create
-aws iam update-access-key --access-key-id AKIAIOSFODNN7EXAMPLE --status Inactive --user-name Bob
-delete
+Create a new access key which will known only by his owner, and delete the original which provided by the administrator.
 
+```bash
+aws iam create
+```
+
+Write the new access and secret key to the ~/.aws/credentials file.
+
+TODO: provide proper commands
+
+```bash
+aws iam update-access-key --access-key-id ........ --status Inactive --user-name $AWS_USER
+delete
+```
+
+Finally, unset the variables with the mfa access key, this will drop the self-management privileges and the user will be back to his own.
+
+```bash
 unset AWS_ACCESS_KEY_ID
 unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN
+```
 
 ### create project specific permissions
+
+Do these steps as administrator user.
 
 https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html
 https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_permissions-to-switch.html
