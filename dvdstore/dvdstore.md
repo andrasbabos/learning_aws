@@ -97,15 +97,15 @@ We suppose that the real person who uses the developer account have multiple aws
 ~/.aws/config
 
 ```ini
-[profile learn_aws]
+[profile $AWS_USER]
 region = eu-north-1
-output = table
+output = json
 ```
 
 ~/.aws/credentials
 
 ```ini
-[learn_aws]
+[$AWS_USER]
 aws_access_key_id = ........
 aws_secret_access_key = ........
 ```
@@ -156,16 +156,16 @@ aws iam list-access-keys
 Create a new access key which will known only by his owner, and delete the original which provided by the administrator.
 
 ```bash
-aws iam create
+aws iam create-access-key --user-name $AWS_USER
 ```
 
 Write the new access and secret key to the ~/.aws/credentials file.
 
-TODO: provide proper commands
+Set the original access key to inactive then delete it.
 
 ```bash
 aws iam update-access-key --access-key-id ........ --status Inactive --user-name $AWS_USER
-delete
+aws iam delete-access-key --access-key-id ........ --user-name $AWS_USER
 ```
 
 Finally, unset the variables with the mfa access key, this will drop the self-management privileges and the user will be back to his own.
@@ -180,9 +180,7 @@ unset AWS_SESSION_TOKEN
 
 Do these steps as administrator user.
 
-https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html
-https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_permissions-to-switch.html
-https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-cli.html
+The project specific permissions are associated with a role, the developer user needs to assume this role with mfa to be able to manage the application and his permissions to assume the role is coming from his group membership.
 
 '''create group'''
 
@@ -198,9 +196,13 @@ aws iam add-user-to-group --user-name $AWS_USER --group-name dvdstore
 
 '''create role'''
 
-The group type doesn't have principal to define in policies, it's only possible to define users. The workaround is to allow everyone in the trust policy to assume role in general, but define a policy  below which will restrict the assume of the dvdstore role only to the members of the dvdstore group.
+It's only possible to define users in policies,  The group type doesn't have the required principal. The workaround is to allow everyone in the trust policy to assume role in general, but define a policy below which will restrict the assume of the dvdstore role only to the members of the dvdstore group.
 
-Edit the AWS_ACCOUNT_ID to the proper value in $git_root/policy/assume_role_with_mfa.json and assume_dvdstore_role.json
+Edit the AWS_ACCOUNT_ID to the proper value in $git_repo_root/dvdstore/policy/assume_role_with_mfa.json and assume_dvdstore_role.json
+
+Allow every user to assume roles in general when they're authenticated with mfa.
+
+Used documentation: <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html>
 
 ```bash
 aws iam create-role --role-name dvdstore-role --assume-role-policy-document file://iam-assume_role_with_mfa.json --tags Key=project,Value=dvdstore
@@ -208,24 +210,30 @@ aws iam create-role --role-name dvdstore-role --assume-role-policy-document file
 
 '''create assume-role policy for the role'''
 
+This will allow the members of the group dvdstore to assume the role dvdstore-role.
+
+Used documentation: <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_permissions-to-switch.html>
+
 ```bash
 aws iam create-policy --policy-name dvdstore-role-policy --policy-document file://iam-assume_dvdstore_role.json --tags Key=project,Value=dvdstore
 aws iam attach-group-policy --group-name dvdstore --policy-arn arn:aws:iam::$AWS_ACCOUNT_ID:policy/dvdstore-role-policy
 ```
 
-''TODO text'''
+''Define permissions and assing to role'''
+
+Define the permissions for manage the application in the dvdstore-management-policy policy then attach this policy to the role dvdstore-role.
 
 ```bash
 aws iam create-policy --policy-name dvdstore-management-policy --policy-document file://dvdstore_management.json --tags Key=project,Value=dvdstore
 aws iam attach-role-policy --role-name dvdstore-role --policy-arn arn:aws:iam::$AWS_ACCOUNT_ID:policy/dvdstore-management-policy
 ```
 
-'''TODO test'''
+'''test permissions'''
 
 get mfa session tokens and set it as environment variables
 
 ```bash
-aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::$AWS_ACCOUNT_ID:mfa/$AWS_USER --profile learn_aws --token-code 
+aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::$AWS_ACCOUNT_ID:mfa/$AWS_USER --profile $AWS_USER --token-code 
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_SESSION_TOKEN=...
@@ -240,17 +248,46 @@ export AWS_SECRET_ACCESS_KEY=...
 export AWS_SESSION_TOKEN=...
 ```
 
-test the access then unset the role tokens
+test the access to additional permissions
 
 ```bash
 aws ec2 describe-tags --region eu-north-1
+```
+
+unset the role tokens
+
+```bash
 unset AWS_ACCESS_KEY_ID
 unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN
 ```
 
-profile assume will handle mfa:
-https://docs.aws.amazon.com/cli/latest/topic/config-vars.html#using-aws-iam-roles
+### streamline the assume role process
 
-more complex switch with profiles and mfa, end goal:
-https://www.redpill-linpro.com/techblog/2020/02/18/awscli.html
+To streamlien the assume role process do the following:
+
+Edit config file and add the role as a profile with the following parameters:
+
+~/.aws/config
+
+```ini
+[profile dvdstore_role]
+source_profile = $AWS_USER
+role_arn = arn:aws:iam::$AWS_ACCOUNT_ID:role/dvdstore-role
+mfa_serial = arn:aws:iam::$AWS_ACCOUNT_ID:mfa/$AWS_USER
+```
+
+Then the commands which are using the role needs the extra profile parameter:
+
+```bash
+aws ec2 describe-tags --region eu-north-1 --profile dvdstore_role
+```
+
+The command will ask for the mfa code and it will save the credentials in $HOME/.aws/cli/cache/some_file.json, subsequent executions will work with the mfa enabled token and the aws command will ask again for mfa code when the current credentials expired.
+
+The aws sts get-session-token and aws sts assume roles won't be needed, but the --profile will be mandatory.
+
+Used documentation:
+
+- <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-cli.html>
+- <https://docs.aws.amazon.com/cli/latest/topic/config-vars.html#using-aws-iam-roles>
