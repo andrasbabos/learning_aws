@@ -38,13 +38,22 @@ Installation:
 
 The default installer is similar to the Linux, but I use Macports as package manager.
 
+The port select command needs the actual version as the second parameter!
+
 ```bash
 sudo port install py-awscli2
+sudo port select --set awscli py310-awscli2
 ```
 
 Autocompletion:
 
-TODO: add this part
+Add the following lines to ~/.zshrc
+
+```bash
+autoload bashcompinit && bashcompinit
+autoload -Uz compinit && compinit
+complete -C '/opt/local/bin/aws_completer' aws
+```
 
 ### configuration
 
@@ -77,6 +86,8 @@ I use the MacPorts package manager, the official documentation recommends Homebr
 
 Installation:
 
+The port select command needs the actual version as the second parameter!
+
 ```bash
 sudo port install terraform-1.3
 sudo port select --set terraform terraform1.3
@@ -93,6 +104,8 @@ If the .zshrc doesn't contain this line then add it:
 ```bash
 echo "autoload -Uz compinit && compinit" >> ~/.zshrc
 ```
+
+Then set up the autocompletion:
 
 ```bash
 terraform -install-autocomplete
