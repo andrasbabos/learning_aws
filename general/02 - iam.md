@@ -33,7 +33,7 @@ These variables are used in the examples below, it safe to simply replace the ex
 export AWS_ACCOUNT_ID="used aws account ID without dash characters"
 export AWS_USER="name of the user who will be the developer"
 export GIT_REPO_ROOT="the path to the root of the git repository in the file system"
-export $PROJECT_NAME="name of the actual project eg. dvdstore" 
+export PROJECT_NAME="name of the actual project eg. dvdstore" 
 ```
 
 create policy
@@ -94,7 +94,7 @@ We suppose that the real person who uses the developer account have multiple aws
 ```ini
 [profile $AWS_USER]
 region = eu-north-1
-output = json
+output = table
 ```
 
 ~/.aws/credentials
@@ -193,7 +193,7 @@ create role
 
 It's only possible to define users in policies,  The group type doesn't have the required principal. The workaround is to allow everyone in the trust policy to assume role in general, but define a policy below which will restrict the assume of the $PROJECT_NAME role only to the members of the $PROJECT_NAME group.
 
-Edit the AWS_ACCOUNT_ID to the proper value in $git_repo_root/$PROJECT_NAME/policy/assume_role_with_mfa.json and assume_$PROJECT_NAME_role.json
+Edit the AWS_ACCOUNT_ID to the proper value in $GIT_REPO_ROOT/$PROJECT_NAME/policy/assume_role_with_mfa.json and assume_$PROJECT_NAME_role.json
 
 Allow every user to assume roles in general when they're authenticated with mfa.
 
