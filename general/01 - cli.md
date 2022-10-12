@@ -57,6 +57,24 @@ complete -C '/opt/local/bin/aws_completer' aws
 
 ### configuration
 
+My configuration file:
+
+```ini
+[profile username]
+region = eu-north-1
+output = table
+cli_auto_prompt = on
+
+[profile service_role]
+source_profile = username
+role_arn = arn:aws:iam::****:role/service-role
+mfa_serial = arn:aws:iam::****:mfa/username
+```
+
+The most readable output types are table and yaml.
+
+cli_auto_prompt will provide dropdown lists of commands and parameters, it's a bit different from tab autocompletion.
+
 ## terraform
 
 Terraform is used by me to create infrastructure as code (instead of cloudformation).
