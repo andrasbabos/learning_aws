@@ -2,11 +2,9 @@
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Action": [
-                "*"
-            ],
-            "Resource": "*",
+            "Action": "s3:*",
             "Effect": "Allow",
+            "Resource": "arn:aws:s3:::*",
             "Condition": {
                 "StringEquals": {
                     "aws:RequestedRegion": "eu-north-1"
