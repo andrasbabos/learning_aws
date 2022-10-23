@@ -5,6 +5,7 @@
   - [set up developer account](#set-up-developer-account)
   - [create project specific permissions](#create-project-specific-permissions)
   - [update project permissions](#update-project-permissions)
+  - [full example for copy-paste](#full-example-for-copy-paste)
   - [streamline the assume role process](#streamline-the-assume-role-process)
 
 In the principle of least privilege the IAM setup is the following:
@@ -34,7 +35,7 @@ These variables are used in the examples below, it safe to simply replace the ex
 export AWS_ACCOUNT_ID="used aws account ID without dash characters"
 export AWS_USER="name of the user who will be the developer"
 export GIT_REPO_ROOT="the path to the root of the git repository in the file system"
-export $PROJECT_NAME="name of the actual project eg. dvdstore" 
+export PROJECT_NAME="name of the actual project eg. dvdstore" 
 ```
 
 create policy
@@ -95,7 +96,7 @@ We suppose that the real person who uses the developer account have multiple aws
 ```ini
 [profile $AWS_USER]
 region = eu-north-1
-output = json
+output = table
 ```
 
 ~/.aws/credentials
@@ -192,9 +193,9 @@ aws iam add-user-to-group --user-name $AWS_USER --group-name $PROJECT_NAME
 
 create role
 
-It's only possible to define users in policies,  The group type doesn't have the required principal. The workaround is to allow everyone in the trust policy to assume role in general, but define a policy below which will restrict the assume of the $PROJECT_NAME role only to the members of the $PROJECT_NAME group.
+It's only possible to define users in policies, the group type doesn't have the required principal. The workaround is to allow everyone in the trust policy to assume role in general, but define a policy below which will restrict the assume of the $PROJECT_NAME role only to the members of the $PROJECT_NAME group.
 
-Edit the AWS_ACCOUNT_ID to the proper value in $git_repo_root/$PROJECT_NAME/policy/assume_role_with_mfa.json and assume_$PROJECT_NAME_role.json
+Edit the AWS_ACCOUNT_ID to the proper value in $GIT_REPO_ROOT/$PROJECT_NAME/policy/assume_role_with_mfa.json and assume_$PROJECT_NAME_role.json
 
 Allow every user to assume roles in general when they're authenticated with mfa.
 
@@ -217,7 +218,7 @@ aws iam attach-group-policy --group-name $PROJECT_NAME --policy-arn arn:aws:iam:
 
 Define permissions and assing to role
 
-Define the permissions for manage the application in the $PROJECT_NAME-management-policy policy then attach this policy to the role $PROJECT_NAME-role.
+Define the permissions to manage the application in the $PROJECT_NAME-management-policy policy then attach this policy to the role $PROJECT_NAME-role.
 
 ```bash
 aws iam create-policy --policy-name $PROJECT_NAME-management-policy --policy-document file://$PROJECT_NAME_management.json --tags Key=project,Value=$PROJECT_NAME
@@ -275,6 +276,23 @@ aws iam create-policy-version --policy-document file://terraform_management.json
 There can be only five versions of a policy, so delete the old one.
 
 aws iam create-policy-version  --policy-arn "arn:aws:iam::$AWS_ACCOUNT_ID:policy/$PROJECT_NAME_management-policy" --version-id v1
+
+## full example for copy-paste
+
+This is a full example for easier copy-paste, the used PROJECT_NAME name is terraform in the json files.
+
+```bash
+aws iam create-group --group-name $PROJECT_NAME
+aws iam add-user-to-group --user-name learn_aws --group-name terraform
+
+aws iam create-role --role-name $PROJECT_NAME-role --assume-role-policy-document file://iam-assume_role_with_mfa.json --tags Key=project,Value=$PROJECT_NAME
+
+aws iam create-policy --policy-name $PROJECT_NAME-role-policy --policy-document file://iam-assume_$PROJECT_NAME_role.json --tags Key=project,Value=$PROJECT_NAME
+aws iam attach-group-policy --group-name $PROJECT_NAME --policy-arn arn:aws:iam::$AWS_ACCOUNT_ID:policy/$PROJECT_NAME-role-policy
+
+aws iam create-policy --policy-name $PROJECT_NAME-management-policy --policy-document file://$PROJECT_NAME_management.json --tags Key=project,Value=$PROJECT_NAME
+aws iam attach-role-policy --role-name $PROJECT_NAME-role --policy-arn arn:aws:iam::$AWS_ACCOUNT_ID:policy/$PROJECT_NAME-management-policy
+```
 
 ## streamline the assume role process
 
