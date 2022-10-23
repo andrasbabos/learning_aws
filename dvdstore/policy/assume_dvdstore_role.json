@@ -4,7 +4,7 @@
         {
             "Effect": "Allow",
             "Action": "sts:AssumeRole",
-            "Resource": "arn:aws:iam::AWS_ACCOUNT_ID:role/dvdstore-role"
+            "Resource": "arn:aws:iam::AWS_ACCOUNT_ID:role/dvdstore"
         }
     ]
 }
