@@ -6,6 +6,6 @@ This project is based on the Dell DVDStore application (<https://github.com/dvds
 
 This project isn't planned to be AWS free tier compatible and tested in European regions (eu-north-1).
 
-The documentation is using aws cli whenever it's possible and it's tested on Mac OS or Linux with bash shell. If the steps performed on different setup then the bash shell specific parts needs to be replaced.
+The documentation is using aws cli and terraform whenever it's possible and it's tested on Mac OS or Linux with bash shell. If the steps performed on different setup then the bash shell specific parts needs to be replaced.
 
 The project is using the following tag whenever it's possible: Key=project,Value=dvdstore, as this is a learning project I'm not sure yet how will I use the tag.

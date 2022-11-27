@@ -215,7 +215,7 @@ aws iam create-policy --policy-name assume_${PROJECT_NAME}_role --policy-documen
 aws iam attach-group-policy --group-name ${PROJECT_NAME} --policy-arn arn:aws:iam::${AWS_ACCOUNT_ID}:policy/assume_${PROJECT_NAME}_role
 ```
 
-Define permissions and assing to role
+Define permissions and assign to role
 
 Define the permissions to manage the application in the $PROJECT_NAME-management policy then attach this policy to the role $PROJECT_NAME.
 
@@ -229,7 +229,7 @@ test permissions
 get mfa session tokens and set it as environment variables
 
 ```bash
-aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/${AWS_USER} --profile ${AWS_USER} --token-code 
+aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/${AWS_USER} --profile ${AWS_USER} --token-code [token code from mfa]
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_SESSION_TOKEN=...
@@ -238,7 +238,7 @@ export AWS_SESSION_TOKEN=...
 switch to role, set the role session tokens as environment variables
 
 ```bash
-aws sts assume-role --role-arn arn:aws:iam::${AWS_ACCOUNT_ID}:role/${PROJECT_NAME}-role --role-session-name "test_${PROJECT_NAME}"
+aws sts assume-role --role-arn arn:aws:iam::${AWS_ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "test_${PROJECT_NAME}"
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_SESSION_TOKEN=...
