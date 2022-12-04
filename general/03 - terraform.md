@@ -14,9 +14,33 @@ This documentation doesn't include general terraform installation, only my speci
 
 TODO:
 
-- create s3 bucket via cli
-- additional permissions for the s3 bucket
+- create s3 bucket via cli, as admin user and block all public access
+
+```bash
+aws s3api create-bucket --bucket ${BUCKET_NAME} --region ${REGION} --create-bucket-configuration LocationConstraint=${REGION}
+aws s3api put-public-access-block --bucket ${BUCKET_NAME} --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+```
+
+- necessary permissions for the s3 bucket, fill in the policy, replace variables with values
+
+```bash
+aws iam create-policy --policy-name ${PROJECT_NAME}_terraform_statefile --policy-document file://${GIT_REPO_ROOT}/${PROJECT_NAME}/policy/${PROJECT_NAME}_terraform_statefile.json --tags Key=project,Value=${PROJECT_NAME}
+aws iam attach-role-policy --role-name ${PROJECT_NAME} --policy-arn arn:aws:iam::${AWS_ACCOUNT_ID}:policy/${PROJECT_NAME}_terraform_statefile
+```
+
 - configure terraform to store in s3
+
+```text
+terraform {
+  backend "s3" {
+    bucket = "${BUCKET_NAME}"
+    key    = "statefile/${PROJECT_NAME}"
+    region = "${REGION}"
+  }
+}
+```
+
+- dynamodb locking isn't implemented yet
 
 ## aws access
 
