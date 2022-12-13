@@ -38,7 +38,7 @@ export BUCKET_NAME="s3 bucket to hold terraform files"
 export GIT_REPO_ROOT="the path to the root of the git repository in the file system"
 export PROJECT_NAME="name of the actual project eg. dvdstore" 
 export REGION="region for s3 bucket"
-export USER="name of the user who will be the developer"
+export USER_NAME="name of the user who will be the developer"
 ```
 
 Additionally it's possible to add these into a separate file (like) and source the variables:
@@ -79,13 +79,13 @@ aws iam attach-group-policy --group-name iam_self_management --policy-arn arn:aw
 create user
 
 ```bash
-aws iam create-user --user-name ${USER} --tags Key=project,Value=general
+aws iam create-user --user-name ${USER_NAME} --tags Key=project,Value=general
 ```
 
 add user to group
 
 ```bash
-aws iam add-user-to-group --user-name ${USER} --group-name iam_self_management
+aws iam add-user-to-group --user-name ${USER_NAME} --group-name iam_self_management
 ```
 
 set initial access key for user
@@ -93,7 +93,7 @@ set initial access key for user
 Set initial access key for user, then hand it over him then he can set up mfa device for own account. With mfa the user can replace the access key, set up password, etc.
 
 ```bash
-aws iam create-access-key --user-name ${USER}
+aws iam create-access-key --user-name ${USER_NAME}
 ```
 
 ## set up developer account
@@ -105,7 +105,7 @@ We suppose that the real person who uses the developer account have multiple aws
 ~/.aws/config
 
 ```ini
-[profile $USER]
+[profile $USER_NAME]
 region = eu-north-1
 output = table
 ```
@@ -113,7 +113,7 @@ output = table
 ~/.aws/credentials
 
 ```ini
-[$USER]
+[$USER_NAME]
 aws_access_key_id = ........
 aws_secret_access_key = ........
 ```
@@ -123,26 +123,26 @@ Here the access and secret key is the one provided by the administrator.
 It's possible to define the profile as command line parameter but it's very error prone so we set up as environment variable.
 
 ```bash
-export AWS_PROFILE=${USER}
+export AWS_PROFILE=${USER_NAME}
 aws iam get-user
 ```
 
 create own virtual mfa device, this command will generate a picture file which whill contain the qr code. The user needs to import this into his own mfa application.
 
 ```bash
-aws iam create-virtual-mfa-device --virtual-mfa-device-name ${USER} --outfile mfa.png --bootstrap-method QRCodePNG --tags Key=project,Value=general
+aws iam create-virtual-mfa-device --virtual-mfa-device-name ${USER_NAME} --outfile mfa.png --bootstrap-method QRCodePNG --tags Key=project,Value=general
 ```
 
 Enable the mfa device, the 2 authentication code parameters needs to be the actual and following token code from the mfa application.
 
 ```bash
-aws iam enable-mfa-device --user-name ${USER} --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER} --authentication-code1 [actual code] --authentication-code2 [following code]
+aws iam enable-mfa-device --user-name ${USER_NAME} --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --authentication-code1 [actual code] --authentication-code2 [following code]
 ```
 
 Get a valid session token with the new mfa device, the token code is from the mfa application.
 
 ```bash
-aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER} --token-code [actual code]
+aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --token-code [actual code]
 ```
 
 This will output the new access, secret key and session token which are mfa enabled and allows to use the self-management permissions.
@@ -164,7 +164,7 @@ aws iam list-access-keys
 Create a new access key which will known only by his owner, and delete the original which provided by the administrator.
 
 ```bash
-aws iam create-access-key --user-name ${USER}
+aws iam create-access-key --user-name ${USER_NAME}
 ```
 
 Write the new access and secret key to the ~/.aws/credentials file.
@@ -172,8 +172,8 @@ Write the new access and secret key to the ~/.aws/credentials file.
 Set the original access key to inactive then delete it.
 
 ```bash
-aws iam update-access-key --access-key-id ........ --status Inactive --user-name ${USER}
-aws iam delete-access-key --access-key-id ........ --user-name ${USER}
+aws iam update-access-key --access-key-id ........ --status Inactive --user-name ${USER_NAME}
+aws iam delete-access-key --access-key-id ........ --user-name ${USER_NAME}
 ```
 
 Finally, unset the variables with the mfa access key, this will drop the self-management privileges and the user will be back to his own.
@@ -199,7 +199,7 @@ aws iam create-group --group-name ${PROJECT_NAME}
 add user to group
 
 ```bash
-aws iam add-user-to-group --user-name ${USER} --group-name ${PROJECT_NAME}
+aws iam add-user-to-group --user-name ${USER_NAME} --group-name ${PROJECT_NAME}
 ```
 
 '''create role'''
@@ -241,7 +241,7 @@ aws iam attach-role-policy --role-name ${PROJECT_NAME} --policy-arn arn:aws:iam:
 get mfa session tokens and set it as environment variables
 
 ```bash
-aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER} --profile ${USER} --token-code [token code from mfa]
+aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code [token code from mfa]
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_SESSION_TOKEN=...
@@ -300,9 +300,9 @@ Edit config file and add the role as a profile with the following parameters:
 
 ```ini
 [profile ${PROJECT_NAME}_role]
-source_profile = ${USER}
+source_profile = ${USER_NAME}
 role_arn = arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME}
-mfa_serial = arn:aws:iam::${ACCOUNT_ID}:mfa/${USER}
+mfa_serial = arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME}
 ```
 
 Then the commands which are using the role needs the extra profile parameter:
