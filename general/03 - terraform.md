@@ -10,6 +10,44 @@ Terraform is the infrastructure as a code tool for my project because:
 
 This documentation doesn't include general terraform installation, only my specific settings like permissions and storing state file in s3 bucket.
 
+## awscli profile for terraform
+
+Set up the minimal profile and credentials via aws cli, this will be used exclusively by terraform.
+
+```bash
+aws configure set profile.${PROJECT_NAME}_session.region ${REGION}
+aws configure set profile.${PROJECT_NAME}_session.aws_access_key_id default_access_key
+aws configure set profile.${PROJECT_NAME}_session.aws_secret_access_key default_secret_key
+
+aws configure set profile.${PROJECT_NAME}_terraform.region ${REGION}
+aws configure set profile.${PROJECT_NAME}_terraform.aws_access_key_id default_access_key
+aws configure set profile.${PROJECT_NAME}_terraform.aws_secret_access_key default_secret_key
+```
+
+This will add entries like these to the users ~/.aws/config and credentials file.
+
+config
+
+```ini
+[profile dvdstore_session]
+region = eu-north-1
+
+[profile dvdstore_terraform]
+region = eu-north-1
+```
+
+credentials
+
+```ini
+[dvdstore_session]
+aws_access_key_id = default_access_key
+aws_secret_access_key = default_secret_key
+
+[dvdstore_terraform]
+aws_access_key_id = default_access_key
+aws_secret_access_key = default_secret_key
+```
+
 ## state file
 
 TODO:
@@ -25,7 +63,7 @@ aws s3api put-public-access-block --bucket ${BUCKET_NAME} --public-access-block-
 
 ```bash
 aws iam create-policy --policy-name ${PROJECT_NAME}_terraform_statefile --policy-document file://${GIT_REPO_ROOT}/${PROJECT_NAME}/policy/${PROJECT_NAME}_terraform_statefile.json --tags Key=project,Value=${PROJECT_NAME}
-aws iam attach-role-policy --role-name ${PROJECT_NAME} --policy-arn arn:aws:iam::${AWS_ACCOUNT_ID}:policy/${PROJECT_NAME}_terraform_statefile
+aws iam attach-role-policy --role-name ${PROJECT_NAME} --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${PROJECT_NAME}_terraform_statefile
 ```
 
 - configure terraform to store in s3
@@ -36,40 +74,65 @@ terraform {
     bucket = "${BUCKET_NAME}"
     key    = "statefile/${PROJECT_NAME}"
     region = "${REGION}"
+    profile = ${PROJECT_NAME}_terraform
   }
 }
 ```
 
 - dynamodb locking isn't implemented yet
 
-## aws access
+## access credentials
 
 The project role is used to deploy environment via terraform which defined for the project in the iam documentation. This role is protected with multi factor authentication which doesn't supported by terraform.
 
-The following steps are needed for deployment:
+Additionally the s3 backend bucket is available via iam policy after the role assumed but terraform tries to read the s3 bucket before assume and fails.
 
-- ask for session token via mfa
+The current way of working for to the developer is the following:
+
+- get session token
+- set the token credentials in the config file for the ${PROJECT_NAME}_session profile
+- assume role with the session profile
+- set the role credentials in the config file for the t${PROJECT_NAME}_erraform profile
+- use terraform commands with the ${PROJECT_NAME}_terraform profile provided in the terraform code
+
+The detailed steps are the following:
+
+- ask for session token
+
+This will ask for the mfa code then display the 3 set commands with the proper values. Simply copy-paste the aws configure commands after.
 
 ```bash
-aws sts get-session-token --duration-seconds 3600 --serial-number arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/${AWS_USER} --profile ${AWS_USER} --token-code [token code from mfa]
+echo "enter mfa code:" && read code && aws sts get-session-token --duration-seconds 3600 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code $code --output text | awk '{print "aws configure set profile.PROFILE.aws_access_key_id " $2 "\n" "aws configure set profile.PROFILE.aws_secret_access_key " $4 "\n" "aws configure set profile.PROFILE.aws_session_token " $5}' | sed 's/PROFILE/${PROJECT_NAME}_session/g'
 ```
 
-- export the variables
+- assume role
+
+This will also display the commands, copy-paste as before.
 
 ```bash
-export AWS_ACCESS_KEY_ID=[output of previous command]
-export AWS_SECRET_ACCESS_KEY=[output of previous command]
-export AWS_SESSION_TOKEN=[output of previous command]
-```
-
-- use the terraform commands eg. ```terraform plan```. The assume role is part of the terraform code
-
-For easier export use the following command.
-
-This will ask for the mfa code (without any text on the screen) then display the 3 export commands with the proper values. Simply copy-paste the export commands after.
-
-```bash
-read code && aws sts get-session-token --duration-seconds 900 --serial-number arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/${AWS_USER} --profile ${AWS_USER} --token-code $code --output text | awk '{print "export AWS_ACCESS_KEY_ID=" $2 "\n" "export AWS_SECRET_ACCESS_KEY=" $4 "\n" "export AWS_SESSION_TOKEN=" $5}'
+aws sts assume-role --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "terraform_${PROJECT_NAME}" --output text | awk '{print "aws configure set profile.PROFILE.aws_access_key_id " $2 "\n" "aws configure set profile.PROFILE.aws_secret_access_key " $4 "\n" "aws configure set profile.PROFILE.aws_session_token " $5}' | sed 's/PROFILE/${PROJECT_NAME}_terraform/g'
 ```
 
 A better solution will be to set up external credentials process with a custom script, software. This is out of the scope of this documentation at the moment.
+
+## terraform settings
+
+The provider block needs to set up with the proper profile and region (there is some trick, if the region isnt' us-east-1 then it needs to defined for sts operations):
+
+```terraform
+provider "aws" {
+  profile = "${PROJECT_NAME}_terraform"
+  region = "${REGION}"
+}
+```
+
+For example:
+
+```terraform
+provider "aws" {
+  profile = dvdstore_terraform
+  region = eu-north-1
+}
+```
+
+After that the terraform plan will work work with the temporary role credentials.
