@@ -4,12 +4,12 @@
         {
             "Effect": "Allow",
             "Action": "s3:ListBucket",
-            "Resource": "arn:aws:s3:::${BUCKET_NAME}"
+            "Resource": "arn:aws:s3:::${TERRAFORM_BUCKET_NAME}"
         },
         {
             "Effect": "Allow",
             "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-            "Resource": "arn:aws:s3:::${BUCKET_NAME}/statefile/${PROJECT_NAME}"
+            "Resource": "arn:aws:s3:::${TERRAFORM_BUCKET_NAME}/statefile/${PROJECT_NAME}"
         }
     ]
 }
