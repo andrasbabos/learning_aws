@@ -55,8 +55,8 @@ TODO:
 - create s3 bucket via cli, as admin user and block all public access
 
 ```bash
-aws s3api create-bucket --bucket ${BUCKET_NAME} --region ${REGION} --create-bucket-configuration LocationConstraint=${REGION}
-aws s3api put-public-access-block --bucket ${BUCKET_NAME} --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+aws s3api create-bucket --bucket ${TERRAFORM_BUCKET_NAME} --region ${REGION} --create-bucket-configuration LocationConstraint=${REGION}
+aws s3api put-public-access-block --bucket ${TERRAFORM_BUCKET_NAME} --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 ```
 
 - necessary permissions for the s3 bucket, fill in the policy, replace variables with values
@@ -71,7 +71,7 @@ aws iam attach-role-policy --role-name ${PROJECT_NAME} --policy-arn arn:aws:iam:
 ```text
 terraform {
   backend "s3" {
-    bucket = "${BUCKET_NAME}"
+    bucket = "${TERRAFORM_BUCKET_NAME}"
     key    = "statefile/${PROJECT_NAME}"
     region = "${REGION}"
     profile = ${PROJECT_NAME}_terraform
