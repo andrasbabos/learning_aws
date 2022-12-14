@@ -99,10 +99,10 @@ The detailed steps are the following:
 
 - ask for session token
 
-This will ask for the mfa code then display the 3 set commands with the proper values. Simply copy-paste the aws configure commands after.
+This will ask for the mfa code then display the 3 set commands with the proper values, the duration is 4 hours. Simply copy-paste the aws configure commands after.
 
 ```bash
-echo "enter mfa code:" && read code && aws sts get-session-token --duration-seconds 3600 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code $code --output text | awk '{print "aws configure set profile.PROFILE.aws_access_key_id " $2 "\n" "aws configure set profile.PROFILE.aws_secret_access_key " $4 "\n" "aws configure set profile.PROFILE.aws_session_token " $5}' | sed 's/PROFILE/${PROJECT_NAME}_session/g'
+echo "enter mfa code:" && read code && aws sts get-session-token --duration-seconds 14400 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code $code --output text | awk '{print "aws configure set profile.PROFILE.aws_access_key_id " $2 "\n" "aws configure set profile.PROFILE.aws_secret_access_key " $4 "\n" "aws configure set profile.PROFILE.aws_session_token " $5}' | sed 's/PROFILE/${PROJECT_NAME}_session/g'
 ```
 
 - assume role
@@ -110,7 +110,7 @@ echo "enter mfa code:" && read code && aws sts get-session-token --duration-seco
 This will also display the commands, copy-paste as before.
 
 ```bash
-aws sts assume-role --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "terraform_${PROJECT_NAME}" --output text | awk '{print "aws configure set profile.PROFILE.aws_access_key_id " $2 "\n" "aws configure set profile.PROFILE.aws_secret_access_key " $4 "\n" "aws configure set profile.PROFILE.aws_session_token " $5}' | sed 's/PROFILE/${PROJECT_NAME}_terraform/g'
+aws sts assume-role --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "${PROJECT_NAME}_terraform" --output text | awk '{print "aws configure set profile.PROFILE.aws_access_key_id " $2 "\n" "aws configure set profile.PROFILE.aws_secret_access_key " $4 "\n" "aws configure set profile.PROFILE.aws_session_token " $5}' | sed 's/PROFILE/${PROJECT_NAME}_terraform/g'
 ```
 
 A better solution will be to set up external credentials process with a custom script, software. This is out of the scope of this documentation at the moment.
