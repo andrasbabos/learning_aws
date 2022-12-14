@@ -128,3 +128,27 @@ Then set up the autocompletion:
 ```bash
 terraform -install-autocomplete
 ```
+
+## ennvironment variables
+
+These variables are used in the documentation and in the json files, it safe to simply replace the example commands with the values also.
+
+The variable names don't have AWS_ prefix to prevent collision with official AWS variables. For example there is AWS_REGION for general use and REGION for these examples only.
+
+```bash
+export ACCOUNT_ID="used aws account ID without dash characters"
+export TERRAFORM_BUCKET_NAME="s3 bucket to hold terraform files"
+export GIT_REPO_ROOT="the path to the root of the git repository in the file system"
+export PROJECT_NAME="name of the actual project eg. dvdstore" 
+export REGION="region for s3 bucket"
+export USER_NAME="name of the user who will be the developer"
+export CLOUDTRAIL_BUCKET_NAME="s3 bucket to hold cloudtrail logs"
+```
+
+Additionally it's possible to add these into a separate file (like) and source the variables:
+
+```bash
+source ${GIT_REPO_ROOT}/general/scripts/environment_variables.sh 
+```
+
+Or add the variables to the users .profile, .bashrc, etc.

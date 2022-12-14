@@ -1,6 +1,7 @@
 export ACCOUNT_ID=""
-export BUCKET_NAME=""
+export TERRAFORM_BUCKET_NAME=""
 export GIT_REPO_ROOT=""
 export PROJECT_NAME=""
 export REGION=""
 export USER_NAME=""
+export CLOUDTRAIL_BUCKET_NAME=""
