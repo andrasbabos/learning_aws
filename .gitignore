@@ -1,2 +1,3 @@
 dvdstore/terraform/.terraform
 dvdstore/terraform/.terraform.lock.hcl
+dvdstore/terraform/terraform.tfvars
