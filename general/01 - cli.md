@@ -6,7 +6,7 @@ I use the MacPorts package manager on macOS, I recommend it to users who are als
 
 ## awscli
 
-### Installation on Linux
+'''Installation on Linux'''
 
 Only version 1 of awscli  is available via packages, so I used the official method and there is no builtin upgrade like for regular packages.
 
@@ -32,7 +32,7 @@ Add the following line to ~/.bashrc
 complete -C '/usr/local/bin/aws_completer' aws
 ```
 
-### Installation on macOS
+'''Installation on macOS'''
 
 Installation:
 
@@ -55,7 +55,7 @@ autoload -Uz compinit && compinit
 complete -C '/opt/local/bin/aws_completer' aws
 ```
 
-### configuration
+'''configuration'''
 
 My configuration file:
 
@@ -79,7 +79,7 @@ cli_auto_prompt will provide dropdown lists of commands and parameters, it's a b
 
 Terraform is used by me to create infrastructure as code (instead of cloudformation).
 
-### Installation on Linux
+'''Installation on Linux'''
 
 Installation:
 
@@ -98,7 +98,7 @@ touch ~/.bashrc
 terraform -install-autocomplete
 ```
 
-### Installation on macOS
+'''Installation on macOS'''
 
 I use the MacPorts package manager, the official documentation recommends Homebrew which is similar software.
 
@@ -127,6 +127,22 @@ Then set up the autocompletion:
 
 ```bash
 terraform -install-autocomplete
+```
+
+## jq
+
+jq is used to manipulate awscli json output for example convert access tokens to proper format for the configuration files.
+
+'''Installation on Linux'''
+
+```bash
+sudo apt-get install jq
+```
+
+'''Installation on macOS'''
+
+```bash
+sudo port install jq
 ```
 
 ## ennvironment variables

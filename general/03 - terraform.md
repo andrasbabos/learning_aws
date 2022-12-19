@@ -99,21 +99,39 @@ The detailed steps are the following:
 
 - ask for session token
 
-This will ask for the mfa code then display the 3 set commands with the proper values, the duration is 4 hours. Simply copy-paste the aws configure commands after.
+This will ask for the mfa code then set up the variables in the aws credentials file, the duration is 4 hours.
 
 ```bash
-echo "enter mfa code:" && read code && aws sts get-session-token --duration-seconds 14400 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code $code --output text | awk '{print "aws configure set profile.PROFILE.aws_access_key_id " $2 "\n" "aws configure set profile.PROFILE.aws_secret_access_key " $4 "\n" "aws configure set profile.PROFILE.aws_session_token " $5}' | sed 's/PROFILE/${PROJECT_NAME}_session/g'
+echo "enter mfa code:" && read code && jsession_output=$(aws sts get-session-token --duration-seconds 14400 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code ${code} --output json)
+```
+
+```bash
+aws configure set profile.${PROJECT_NAME}_session.aws_access_key_id `echo "${session_output}" | jq --raw-output ".Credentials[\"AccessKeyId\"]"`
+aws configure set profile.${PROJECT_NAME}_session.aws_secret_access_key `echo "${session_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]"`
+aws configure set profile.${PROJECT_NAME}_session.aws_session_token `echo "${session_output}" | jq --raw-output ".Credentials[\"SessionToken\"]"`
 ```
 
 - assume role
 
-This will also display the commands, copy-paste as before.
+This will set up the variables.
 
 ```bash
-aws sts assume-role --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "${PROJECT_NAME}_terraform" --output text | awk '{print "aws configure set profile.PROFILE.aws_access_key_id " $2 "\n" "aws configure set profile.PROFILE.aws_secret_access_key " $4 "\n" "aws configure set profile.PROFILE.aws_session_token " $5}' | sed 's/PROFILE/${PROJECT_NAME}_terraform/g'
+role_output=$(aws sts assume-role --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "${PROJECT_NAME}_terraform" --output json)
+```
+
+```bash
+aws configure set profile.${PROJECT_NAME}_terraform.aws_access_key_id `echo "${role_output}" | jq --raw-output ".Credentials[\"AccessKeyId\"]"`
+aws configure set profile.${PROJECT_NAME}_terraform.aws_secret_access_key `echo "${role_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]"`
+aws configure set profile.${PROJECT_NAME}_terraform.aws_session_token `echo "${role_output}" | jq --raw-output ".Credentials[\"SessionToken\"]"`
 ```
 
 A better solution will be to set up external credentials process with a custom script, software. This is out of the scope of this documentation at the moment.
+
+To test the credentials it's good to list the contents of the bucket which holds the statefile:
+
+```bash
+aws s3 ls --profile ${PROJECT_NAME}_terraform ${TERRAFORM_BUCKET_NAME}/statefile/${PROJECT_NAME}
+```
 
 ## variables files
 
@@ -129,23 +147,18 @@ The following files are used:
 The provider block needs to set up with the proper values
 
 - profile which is have the name ${PROJECT_NAME}_terraform in the config, credentials files
-- region, if the region isnt' us-east-1 then it needs to defined for sts operations
-
-terraform.tfvars
-
-```terraform
-provider_profile = "${PROJECT_NAME}_terraform"
-provider_region  = "${REGION}"
-```
+- region, if the region isn't us-east-1 then it needs to defined for sts operations
 
 provider.tf
 
 ```terraform
 provider "aws" {
-  profile = var.provider_profile
-  region  = var.provider_region
+  profile = "${PROJECT_NAME}_terraform"
+  region  = "${REGION}"
 }
 ```
+
+The provider.tf.example is present in the repository the same way as terraform.tfvars.example
 
 ## backend settings
 
@@ -153,23 +166,16 @@ Configuration details of the s3 bucket which stores the state file
 
 There are separate values from the provider as the state bucket is not necessarily is under the same account, in the same region.
 
-terraform.tfvars
-
-```terraform
-backend_profile = "${PROJECT_NAME}_terraform"
-backend_region  = "${REGION}"
-backend_bucket  = "${TERRAFORM_BUCKET_NAME}"
-backend_key     = "statefile/${PROJECT_NAME}"
-```
-
 backend.tf
 
 ```terraform
 terraform {
   backend "s3" {
-    profile = var.backend_profile
-    region  = var.backend_region
-    bucket  = var.backend_bucket
-    key     = var.backend_key
+    profile = "${PROJECT_NAME}_terraform"
+    region  = "${REGION}"
+    bucket  = "${TERRAFORM_BUCKET_NAME}"
+    key     = "statefile/${PROJECT_NAME}"
   }
 }
+
+The backend.tf.example is present in the repository the same way as terraform.tfvars.example
