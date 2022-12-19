@@ -115,24 +115,61 @@ aws sts assume-role --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${
 
 A better solution will be to set up external credentials process with a custom script, software. This is out of the scope of this documentation at the moment.
 
-## terraform settings
+## variables files
 
-The provider block needs to set up with the proper profile and region (there is some trick, if the region isnt' us-east-1 then it needs to defined for sts operations):
+As best practice I separate code from data, the values for the variables are in different file.
+
+The following files are used:
+
+- variables.tf - declares the variables used in other .tf files
+- terraform.tfvars - define values for variables. There is a terraform.tfvars.example file in the repository and the actual terraform.tfvars file is stored in a separate, private repository because I don't want to publicly expose my real variable values. In real situations the tfvars will be in this repository.
+
+## provider settings
+
+The provider block needs to set up with the proper values
+
+- profile which is have the name ${PROJECT_NAME}_terraform in the config, credentials files
+- region, if the region isnt' us-east-1 then it needs to defined for sts operations
+
+terraform.tfvars
+
+```terraform
+provider_profile = "${PROJECT_NAME}_terraform"
+provider_region  = "${REGION}"
+```
+
+provider.tf
 
 ```terraform
 provider "aws" {
-  profile = "${PROJECT_NAME}_terraform"
-  region = "${REGION}"
+  profile = var.provider_profile
+  region  = var.provider_region
 }
 ```
 
-For example:
+## backend settings
+
+Configuration details of the s3 bucket which stores the state file
+
+There are separate values from the provider as the state bucket is not necessarily is under the same account, in the same region.
+
+terraform.tfvars
 
 ```terraform
-provider "aws" {
-  profile = dvdstore_terraform
-  region = eu-north-1
-}
+backend_profile = "${PROJECT_NAME}_terraform"
+backend_region  = "${REGION}"
+backend_bucket  = "${TERRAFORM_BUCKET_NAME}"
+backend_key     = "statefile/${PROJECT_NAME}"
 ```
 
-After that the terraform plan will work work with the temporary role credentials.
+backend.tf
+
+```terraform
+terraform {
+  backend "s3" {
+    profile = var.backend_profile
+    region  = var.backend_region
+    bucket  = var.backend_bucket
+    key     = var.backend_key
+  }
+}
