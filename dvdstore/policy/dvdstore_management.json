@@ -3,6 +3,7 @@
     "Statement": [
         {
             "Action": [
+                "ec2:CreateKeyPair",
                 "ec2:DescribeInstances",
                 "ec2:DescribeInstanceAttribute",
                 "ec2:DescribeInstanceCreditSpecifications",

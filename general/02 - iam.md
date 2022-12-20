@@ -4,6 +4,7 @@
   - [create general account permissions](#create-general-account-permissions)
   - [set up developer account](#set-up-developer-account)
   - [create project specific permissions](#create-project-specific-permissions)
+  - [create ssh key for project](#create-ssh-key-for-project)
   - [update project permissions](#update-project-permissions)
   - [streamline the assume role process](#streamline-the-assume-role-process)
 
@@ -247,6 +248,26 @@ unset the role tokens
 unset AWS_ACCESS_KEY_ID
 unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN
+```
+
+## create ssh key for project
+
+Ssh key pair is needed for the ec2 instances, it is a security credential and it's also created outside of the project's terraform code.
+
+This step needs to be run as an administrator user or as the developer user assuming the project role.
+
+```bash
+aws ec2 create-key-pair --key-name ${PROJECT_NAME}_deployment --region ${REGION} --profile ${PROJECT_NAME}_terraform
+```
+
+Save the private key part from the output and use it later as the ssh private key when needed.
+
+The aws cli ouptut format will be one line string with \n characters, it needs to be saves like this:
+
+```text
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCA.....
+-----END RSA PRIVATE KEY-----
 ```
 
 ## update project permissions
