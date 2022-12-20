@@ -177,5 +177,6 @@ terraform {
     key     = "statefile/${PROJECT_NAME}"
   }
 }
+```
 
 The backend.tf.example is present in the repository the same way as terraform.tfvars.example
