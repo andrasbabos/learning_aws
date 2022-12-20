@@ -102,7 +102,7 @@ The detailed steps are the following:
 This will ask for the mfa code then set up the variables in the aws credentials file, the duration is 4 hours.
 
 ```bash
-echo "enter mfa code:" && read code && jsession_output=$(aws sts get-session-token --duration-seconds 14400 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code ${code} --output json)
+echo "enter mfa code:" && read code && session_output=$(aws sts get-session-token --duration-seconds 14400 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code ${code} --output json)
 ```
 
 ```bash
