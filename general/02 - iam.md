@@ -322,10 +322,10 @@ Used documentation:
 
 '''streamline without profile'''
 
-This will ask for the mfa code (without any text on the screen) then display the 3 export commands with the proper values. Simply copy-paste the export commands after.
+This will ask for the mfa code then display the 3 export commands with the proper values. Simply copy-paste the export commands after.
 
 ```bash
-read code && aws sts get-session-token --duration-seconds 3600 --serial-number arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/${AWS_USER} --profile ${AWS_USER} --token-code $code --output text | awk '{print "export AWS_ACCESS_KEY_ID=" $2 "\n" "export AWS_SECRET_ACCESS_KEY=" $4 "\n" "export AWS_SESSION_TOKEN=" $5}'
+echo "enter mfa code:" && read code && aws sts get-session-token --duration-seconds 3600 --serial-number arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/${AWS_USER} --profile ${AWS_USER} --token-code $code --output text | awk '{print "export AWS_ACCESS_KEY_ID=" $2 "\n" "export AWS_SECRET_ACCESS_KEY=" $4 "\n" "export AWS_SESSION_TOKEN=" $5}'
 ```
 
 This is the second step to assume the role itself.

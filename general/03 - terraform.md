@@ -113,10 +113,10 @@ aws configure set profile.${PROJECT_NAME}_session.aws_session_token `echo "${ses
 
 - assume role
 
-This will set up the variables.
+This will set up the variables. The AWS settings allow only one hour for the assume role, the parameter is set up there for the maximum value to remind me for it.
 
 ```bash
-role_output=$(aws sts assume-role --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "${PROJECT_NAME}_terraform" --output json)
+role_output=$(aws sts assume-role --duration-seconds 3600 --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "${PROJECT_NAME}_terraform" --output json)
 ```
 
 ```bash
