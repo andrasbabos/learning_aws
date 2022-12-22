@@ -1,5 +1,9 @@
 # cloudtrail
 
+## role of cloudtrail in this project
+
+Cloudtrail can be used for long term auditing with proper setup, like creating the s3 bucket in different account setting up proper policies to reduce the possibility for the attacker to delete the trail or bucket settings, etc. This is a learning project first and this setup have lower priority so the documentation below is more of an example now than a proper setup.
+
 ## define, update permissions for management policy
 
 Following the idea of least privilege the default management policy for a project only contains some basic read-only permissions and additional ones added when needed.
