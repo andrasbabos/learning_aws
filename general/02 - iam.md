@@ -262,10 +262,11 @@ aws ec2 create-key-pair --key-name ${PROJECT_NAME}_deployment --region ${REGION}
 
 Save the private key part from the output and use it later as the ssh private key when needed.
 
-The aws cli ouptut format will be one line string with \n characters, it needs to be saves like this:
+The aws cli ouptut format will be one line string with multiple \n, new line characters, it needs to be saves like this:
 
 ```text
 -----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCA.....
 MIIEpAIBAAKCA.....
 -----END RSA PRIVATE KEY-----
 ```
