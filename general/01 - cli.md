@@ -8,7 +8,7 @@ I use the MacPorts package manager on macOS, I recommend it to users who are als
 
 '''Installation on Linux'''
 
-Only version 1 of awscli  is available via packages, so I used the official method and there is no builtin upgrade like for regular packages.
+Only version 1 of awscli is available via packages, so I used the official method and there is no builtin upgrade like for regular packages.
 
 Installation:
 
@@ -32,7 +32,7 @@ Add the following line to ~/.bashrc
 complete -C '/usr/local/bin/aws_completer' aws
 ```
 
-'''Installation on macOS'''
+'''Installation on macOS with Macports'''
 
 Installation:
 
@@ -43,6 +43,44 @@ The port select command needs the actual version as the second parameter!
 ```bash
 sudo port install py-awscli2
 sudo port select --set awscli py310-awscli2
+```
+
+'''Installation on macOS with aws installer'''
+
+This is the official method for current user without sudo rights.
+
+First create an xml file, name it choices.xml, replace the /Users/myusername with the target path where the aws-cli directory will be created.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <array>
+    <dict>
+      <key>choiceAttribute</key>
+      <string>customLocation</string>
+      <key>attributeSetting</key>
+      <string>/Users/myusername</string>
+      <key>choiceIdentifier</key>
+      <string>default</string>
+    </dict>
+  </array>
+</plist>
+```
+
+Download the installer and run it with the custom xml config.
+
+```bash
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+
+installer -pkg AWSCLIV2.pkg -target CurrentUserHomeDirectory -applyChoiceChangesXML choices.xml
+```
+
+Create symlinks or modify path variable for aws cli. I this example  create symlinks to my personal bin directory which already created and added to PATH variable.
+
+```bash
+ln -s /Users/myusername/aws-cli/aws /Users/myusername/bin/aws
+ln -s /Users/myusername/aws-cli/aws_completer /Users/myusername/bin/aws_completer
 ```
 
 Autocompletion:
@@ -98,7 +136,7 @@ touch ~/.bashrc
 terraform -install-autocomplete
 ```
 
-'''Installation on macOS'''
+'''Installation on macOS with Macports'''
 
 I use the MacPorts package manager, the official documentation recommends Homebrew which is similar software.
 
@@ -111,7 +149,21 @@ sudo port install terraform-1.3
 sudo port select --set terraform terraform1.3
 ```
 
-Autocompletion:
+'''Installation on macOS with Homebrew'''
+
+Add the terraform package repository
+
+```bash
+brew tap hashicorp/tap
+```
+
+Install package
+
+```bash
+brew install hashicorp/tap/terraform
+```
+
+'''Autocompletion:'''
 
 ```bash
 touch ~/.zshrc
