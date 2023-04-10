@@ -27,7 +27,7 @@ Do these steps as administrator user.
 
 First step is to create the developer user and set up the self-management permissions for it.
 
-create policy
+**create policy**
 
 This policy will give the user the permission to set up it's own mfa device and manage own credentials (like password, access key) after successful authentication with mfa.
 
@@ -37,7 +37,7 @@ Source documentation: <https://docs.aws.amazon.com/IAM/latest/UserGuide/referenc
 aws iam create-policy --policy-name iam_self_management --policy-document file://${GIT_REPO_ROOT}/general/policy/iam_self_management.json --tags Key=project,Value=general
 ```
 
-create group
+**create group**
 
 Policies are assigned to groups and users are in the groups where they need permissions as best practice.
 
@@ -47,20 +47,20 @@ This group will include users which needs the self-management permissions.
 aws iam create-group --group-name iam_self_management
 ```
 
-attach policies
+**attach policies**
 
 ```bash
 
 aws iam attach-group-policy --group-name iam_self_management --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/iam_self_management
 ```
 
-create user
+**create user**
 
 ```bash
 aws iam create-user --user-name ${USER_NAME} --tags Key=project,Value=general
 ```
 
-add user to group
+**add user to group**
 
 ```bash
 aws iam add-user-to-group --user-name ${USER_NAME} --group-name iam_self_management
@@ -83,8 +83,8 @@ We suppose that the real person who uses the developer account have multiple aws
 ~/.aws/config
 
 ```ini
-[profile $USER_NAME]
-region = eu-north-1
+[profile ${USER_NAME}]
+region = ${REGION}
 output = table
 ```
 
@@ -180,11 +180,11 @@ add user to group
 aws iam add-user-to-group --user-name ${USER_NAME} --group-name ${PROJECT_NAME}
 ```
 
-'''create role'''
+**create role**
 
-It's only possible to define users in policies, the group type doesn't have the required principal. The workaround is to allow everyone in the trust policy to assume role in general, but define a policy below which will restrict the assume of the ${PROJECT_NAME} role only to the members of the ${PROJECT_NAME} group.
+It's only possible to define users in policies, the group type doesn't have the required principal. The workaround is to allow everyone in the trust policy to assume role in general, but define a policy below which will restrict the assume of the PROJECT_NAME role only to the members of the PROJECT_NAME group.
 
-Edit the ${ACCOUNT_ID} to the proper value in ${GIT_REPO_ROOT}/general/policy/assume_role_with_mfa.json and ${GIT_REPO_ROOT}/${PROJECT_NAME}/policy/assume_${PROJECT_NAME}_role.json
+Edit the ACCOUNT_ID to the proper value in ```GIT_REPO_ROOT/general/policy/assume_role_with_mfa.json``` and ```GIT_REPO_ROOT/PROJECT_NAME/policy/assume_PROJECT_NAME_role.json```
 
 Allow every user to assume roles in general when they're authenticated with mfa.
 
@@ -194,9 +194,9 @@ Used documentation: <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_c
 aws iam create-role --role-name ${PROJECT_NAME} --assume-role-policy-document file://${GIT_REPO_ROOT}/general/policy/assume_role_with_mfa.json --tags Key=project,Value=${PROJECT_NAME}
 ```
 
-'''create assume-role policy for the role'''
+**create assume-role policy for the role**
 
-This will allow the members of the group ${PROJECT_NAME} to assume the role ${PROJECT_NAME}.
+This will allow the members of the group PROJECT_NAME to assume the role PROJECT_NAME.
 
 Used documentation: <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_permissions-to-switch.html>
 
@@ -205,9 +205,9 @@ aws iam create-policy --policy-name assume_${PROJECT_NAME}_role --policy-documen
 aws iam attach-group-policy --group-name ${PROJECT_NAME} --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/assume_${PROJECT_NAME}_role
 ```
 
-'''Define permissions and assign to role'''
+**Define permissions and assign to role**
 
-Define the permissions to manage the application in the ${PROJECT_NAME}-management policy then attach this policy to the role ${PROJECT_NAME}.
+Define the permissions to manage the application in the PROJECT_NAME-management policy then attach this policy to the role PROJECT_NAME.
 
 Alternatively the almost empty test policy can be used: ```file://${GIT_REPO_ROOT}/general/policy/project_management.json```, this defines minimal ec2 permissions to test the whole role process itself.
 
@@ -216,7 +216,7 @@ aws iam create-policy --policy-name ${PROJECT_NAME}_management --policy-document
 aws iam attach-role-policy --role-name ${PROJECT_NAME} --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${PROJECT_NAME}_management
 ```
 
-'''test permissions'''
+**test permissions**
 
 get mfa session tokens and set it as environment variables
 
@@ -287,11 +287,13 @@ aws iam create-policy-version --policy-document ile://${GIT_REPO_ROOT}/${PROJECT
 
 There can be only five versions of a policy, so delete the old one.
 
+```bash
 aws iam create-policy-version  --policy-arn "arn:aws:iam::${ACCOUNT_ID}:policy/${PROJECT_NAME}_management" --version-id v1
+```
 
 ## streamline the assume role process
 
-'''streamline with profile'''
+**streamline with profile**
 
 To streamline the assume role process do the following:
 
@@ -302,6 +304,7 @@ Edit config file and add the role as a profile with the following parameters:
 ```ini
 [profile ${PROJECT_NAME}_role]
 source_profile = ${USER_NAME}
+region = ${REGION}
 role_arn = arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME}
 mfa_serial = arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME}
 ```
@@ -309,7 +312,7 @@ mfa_serial = arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME}
 Then the commands which are using the role needs the extra profile parameter:
 
 ```bash
-aws ec2 describe-tags --region ${REGION} --profile ${PROJECT_NAME}_role
+aws ec2 describe-tags --profile ${PROJECT_NAME}_role
 ```
 
 The command will ask for the mfa code and it will save the credentials in $HOME/.aws/cli/cache/some_file.json, subsequent executions will work with the mfa enabled token and the aws command will ask again for mfa code when the current credentials expired.
@@ -321,12 +324,12 @@ Used documentation:
 - <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-cli.html>
 - <https://docs.aws.amazon.com/cli/latest/topic/config-vars.html#using-aws-iam-roles>
 
-'''streamline without profile'''
+**streamline without profile**
 
 This will ask for the mfa code then display the 3 export commands with the proper values. Simply copy-paste the export commands after.
 
 ```bash
-echo "enter mfa code:" && read code && aws sts get-session-token --duration-seconds 3600 --serial-number arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/${AWS_USER} --profile ${AWS_USER} --token-code $code --output text | awk '{print "export AWS_ACCESS_KEY_ID=" $2 "\n" "export AWS_SECRET_ACCESS_KEY=" $4 "\n" "export AWS_SESSION_TOKEN=" $5}'
+echo "enter mfa code:" && read code && aws sts get-session-token --duration-seconds 3600 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code $code --output text | awk '{print "export AWS_ACCESS_KEY_ID=" $2 "\n" "export AWS_SECRET_ACCESS_KEY=" $4 "\n" "export AWS_SESSION_TOKEN=" $5}'
 ```
 
 This is the second step to assume the role itself.
