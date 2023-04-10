@@ -2,7 +2,7 @@ resource "aws_security_group" "dvdstore" {
   name        = "dvdstore"
   description = "dvdstore basic rules"
   tags = {
-    Name = "dvdstore"
+    project = "dvdstore"
   }
 }
 
@@ -33,7 +33,7 @@ resource "aws_security_group_rule" "egress_all" {
   security_group_id = aws_security_group.dvdstore.id
 }
 
-resource "aws_security_group_rule" "allow_all_in_sg" {
+resource "aws_security_group_rule" "allow_all_inside_sg" {
   type              = "ingress"
   from_port         = 0
   to_port           = 0
