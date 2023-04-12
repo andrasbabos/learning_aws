@@ -92,7 +92,7 @@ The current way of working for to the developer is the following:
 - get session token
 - set the token credentials in the config file for the ${PROJECT_NAME}_session profile
 - assume role with the session profile
-- set the role credentials in the config file for the t${PROJECT_NAME}_erraform profile
+- set the role credentials in the config file for the ${PROJECT_NAME}_terraform profile
 - use terraform commands with the ${PROJECT_NAME}_terraform profile provided in the terraform code
 
 The detailed steps are the following:
@@ -132,6 +132,8 @@ To test the credentials it's good to list the contents of the bucket which holds
 ```bash
 aws s3 ls --profile ${PROJECT_NAME}_terraform ${TERRAFORM_BUCKET_NAME}/statefile/${PROJECT_NAME}
 ```
+
+I created two scripts get_token.sh and assume_role.sh which are in the general/scripts directory, these will do token and role part of the commands above. These are two separate scripts as the token needed every 4 hours but the role every hour.
 
 ## variables files
 
