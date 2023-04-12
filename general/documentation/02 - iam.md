@@ -319,6 +319,13 @@ The command will ask for the mfa code and it will save the credentials in $HOME/
 
 The aws sts get-session-token and aws sts assume roles won't be needed, but the --profile will be mandatory.
 
+To avoid the constant use of the --profile parameter set up the AWS_PROFILE environment variable, then use the aws command without it.
+
+```bash
+export AWS_PROFILE=${PROJECT_NAME}_role
+aws ec2 describe-tags
+```
+
 Used documentation:
 
 - <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-cli.html>
