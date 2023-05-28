@@ -142,7 +142,7 @@ As best practice I separate code from data, the values for the variables are in 
 The following files are used:
 
 - variables.tf - declares the variables used in other .tf files
-- terraform.tfvars - define values for variables. There is a terraform.tfvars.example file in the repository and the actual terraform.tfvars file is stored in a separate, private repository because I don't want to publicly expose my real variable values. In real situations the tfvars will be in this repository.
+- terraform.tfvars - define values for variables.
 
 ## provider settings
 
@@ -159,8 +159,6 @@ provider "aws" {
   region  = "${REGION}"
 }
 ```
-
-The provider.tf.example is present in the repository the same way as terraform.tfvars.example
 
 ## backend settings
 
@@ -180,5 +178,3 @@ terraform {
   }
 }
 ```
-
-The backend.tf.example is present in the repository the same way as terraform.tfvars.example
