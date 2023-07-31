@@ -97,3 +97,5 @@ aws sts decode-authorization-message --encoded-message teUZg
 ```
 
 The output will be json formatted and contains the refused action.
+
+The necessary privilege is the sts:DecodeAuthorizationMessage action.
