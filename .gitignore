@@ -1,5 +1,0 @@
-dvdstore/terraform/.terraform
-dvdstore/terraform/.terraform.lock.hcl
-dvdstore/terraform/backend.tf
-dvdstore/terraform/provider.tf
-dvdstore/terraform/terraform.tfvars
