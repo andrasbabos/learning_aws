@@ -32,7 +32,7 @@ Add the following line to ~/.bashrc
 complete -C '/usr/local/bin/aws_completer' aws
 ```
 
-'''Installation on macOS with Macports'''
+**Installation on macOS with Macports**
 
 Installation:
 
@@ -136,7 +136,7 @@ touch ~/.bashrc
 terraform -install-autocomplete
 ```
 
-'''Installation on macOS with Macports'''
+**Installation on macOS with Macports**
 
 I use the MacPorts package manager, the official documentation recommends Homebrew which is similar software.
 
