@@ -45,7 +45,7 @@ sudo port install py-awscli2
 sudo port select --set awscli py310-awscli2
 ```
 
-'''Installation on macOS with aws installer'''
+**Installation on macOS with aws installer**
 
 This is the official method for current user without sudo rights.
 
@@ -201,7 +201,7 @@ sudo port install jq
 
 These variables are used in the documentation and in the json files, it safe to simply replace the example commands with the values also.
 
-The variable names don't have AWS_ prefix to prevent collision with official AWS variables. For example there is AWS_REGION for general use and REGION for these examples only.
+The variable names don't have "AWS_" prefix to prevent collision with official AWS variables. For example there is AWS_REGION for general use and REGION for these examples only.
 
 ```bash
 export ACCOUNT_ID="used aws account ID without dash characters"
