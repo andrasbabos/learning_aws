@@ -11,3 +11,14 @@ theme:
     primary: indigo
 nav:
   - 'start': 'index.md'
+  - 'general':
+    - 'cli': 'general/cli.md'
+    - 'iam': 'general/iam.md'
+    - 'terraform': 'general/terraform.md'
+    - 'cloudtrail': 'general/cloudtrail.md'
+  #- 'static page':
+  - 'dvdstore':
+    - 'general': 'dvdstore/general.md'
+    - 'vpc': 'dvdstore/vpc.md'
+    - 'ec2': 'dvdstore/ec2.md'
+    - 'os configuration': 'dvdstore/os_configuration.md'
