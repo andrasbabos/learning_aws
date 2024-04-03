@@ -6,13 +6,13 @@ I use the MacPorts package manager on macOS, I recommend it to users who are als
 
 ## awscli
 
-**Installation on Linux**
+### Installation on Linux
 
 Only version 1 of awscli is available via packages, so I used the official method and there is no builtin upgrade like for regular packages.
 
 Installation:
 
-```bash
+```shell
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
 sudo ./aws/install
@@ -20,7 +20,7 @@ sudo ./aws/install
 
 The default values are these, it's possible to install to user's home directory without sudo
 
-```bash
+```shell
 ./aws/install --install-dir /usr/local/aws-cli --bin-dir /usr/local/bin
 ```
 
@@ -28,24 +28,22 @@ Autocompletion:
 
 Add the following line to ~/.bashrc
 
-```bash
+```shell
 complete -C '/usr/local/bin/aws_completer' aws
 ```
 
-**Installation on macOS with Macports**
-
-Installation:
+### Installation on macOS with Macports
 
 The default installer is similar to the Linux, but I use Macports as package manager.
 
 The port select command needs the actual version as the second parameter!
 
-```bash
+```shell
 sudo port install py-awscli2
 sudo port select --set awscli py310-awscli2
 ```
 
-**Installation on macOS with aws installer**
+### Installation on macOS with aws installer
 
 This is the official method for current user without sudo rights.
 
@@ -70,7 +68,7 @@ First create an xml file, name it choices.xml, replace the /Users/myusername wit
 
 Download the installer and run it with the custom xml config.
 
-```bash
+```shell
 curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
 
 installer -pkg AWSCLIV2.pkg -target CurrentUserHomeDirectory -applyChoiceChangesXML choices.xml
@@ -78,7 +76,7 @@ installer -pkg AWSCLIV2.pkg -target CurrentUserHomeDirectory -applyChoiceChanges
 
 Create symlinks or modify path variable for aws cli. I this example  create symlinks to my personal bin directory which already created and added to PATH variable.
 
-```bash
+```shell
 ln -s /Users/myusername/aws-cli/aws /Users/myusername/bin/aws
 ln -s /Users/myusername/aws-cli/aws_completer /Users/myusername/bin/aws_completer
 ```
@@ -87,13 +85,13 @@ Autocompletion:
 
 Add the following lines to ~/.zshrc
 
-```bash
+```shell
 autoload bashcompinit && bashcompinit
 autoload -Uz compinit && compinit
 complete -C '/opt/local/bin/aws_completer' aws
 ```
 
-**configuration**
+### configuration
 
 My configuration file:
 
@@ -117,11 +115,11 @@ cli_auto_prompt will provide dropdown lists of commands and parameters, it's a b
 
 Terraform is used by me to create infrastructure as code (instead of cloudformation).
 
-**Installation on Linux**
+### Installation on Linux
 
 Installation:
 
-```bash
+```shell
 sudo apt-get install -y gnupg software-properties-common
 curl -L https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 echo "deb https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
@@ -131,12 +129,12 @@ sudo apt-get install terraform
 
 Autocompletion:
 
-```bash
+```shell
 touch ~/.bashrc
 terraform -install-autocomplete
 ```
 
-**Installation on macOS with Macports**
+### Installation on macOS with Macports
 
 I use the MacPorts package manager, the official documentation recommends Homebrew which is similar software.
 
@@ -144,40 +142,40 @@ Installation:
 
 The port select command needs the actual version as the second parameter!
 
-```bash
+```shell
 sudo port install terraform-1.3
 sudo port select --set terraform terraform1.3
 ```
 
-'''Installation on macOS with Homebrew'''
+### Installation on macOS with Homebrew
 
 Add the terraform package repository
 
-```bash
+```shell
 brew tap hashicorp/tap
 ```
 
 Install package
 
-```bash
+```shell
 brew install hashicorp/tap/terraform
 ```
 
-'''Autocompletion:'''
+Autocompletion:
 
-```bash
+```shell
 touch ~/.zshrc
 ```
 
 If the .zshrc doesn't contain this line then add it:
 
-```bash
+```shell
 echo "autoload -Uz compinit && compinit" >> ~/.zshrc
 ```
 
 Then set up the autocompletion:
 
-```bash
+```shell
 terraform -install-autocomplete
 ```
 
@@ -185,15 +183,15 @@ terraform -install-autocomplete
 
 jq is used to manipulate awscli json output for example convert access tokens to proper format for the configuration files.
 
-**Installation on Linux**
+Installation on Linux
 
-```bash
+```shell
 sudo apt-get install jq
 ```
 
-**Installation on macOS**
+Installation on macOS
 
-```bash
+```shell
 sudo port install jq
 ```
 
@@ -203,7 +201,7 @@ These variables are used in the documentation and in the json files, it safe to 
 
 The variable names don't have "AWS_" prefix to prevent collision with official AWS variables. For example there is AWS_REGION for general use and REGION for these examples only.
 
-```bash
+```shell
 export ACCOUNT_ID="used aws account ID without dash characters"
 export TERRAFORM_BUCKET_NAME="s3 bucket to hold terraform files"
 export GIT_REPO_ROOT="the path to the root of the git repository in the file system"
@@ -215,7 +213,7 @@ export CLOUDTRAIL_BUCKET_NAME="s3 bucket to hold cloudtrail logs"
 
 Additionally it's possible to add these into a separate file (like) and source the variables:
 
-```bash
+```shell
 source ${GIT_REPO_ROOT}/general/scripts/environment_variables.sh 
 ```
 

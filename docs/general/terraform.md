@@ -14,7 +14,7 @@ This documentation doesn't include general terraform installation, only my speci
 
 Set up the minimal profile and credentials via aws cli, this will be used exclusively by terraform.
 
-```bash
+```shell
 aws configure set profile.${PROJECT_NAME}_session.region ${REGION}
 aws configure set profile.${PROJECT_NAME}_session.aws_access_key_id default_access_key
 aws configure set profile.${PROJECT_NAME}_session.aws_secret_access_key default_secret_key
@@ -54,14 +54,14 @@ TODO:
 
 - create s3 bucket via cli, as admin user and block all public access
 
-```bash
+```shell
 aws s3api create-bucket --bucket ${TERRAFORM_BUCKET_NAME} --region ${REGION} --create-bucket-configuration LocationConstraint=${REGION}
 aws s3api put-public-access-block --bucket ${TERRAFORM_BUCKET_NAME} --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 ```
 
 - necessary permissions for the s3 bucket, fill in the policy, replace variables with values
 
-```bash
+```shell
 aws iam create-policy --policy-name ${PROJECT_NAME}_terraform_statefile --policy-document file://${GIT_REPO_ROOT}/${PROJECT_NAME}/policy/${PROJECT_NAME}_terraform_statefile.json --tags Key=project,Value=${PROJECT_NAME}
 aws iam attach-role-policy --role-name ${PROJECT_NAME} --policy-arn arn:aws:iam::${ACCOUNT_ID}:policy/${PROJECT_NAME}_terraform_statefile
 ```
@@ -101,11 +101,11 @@ The detailed steps are the following:
 
 This will ask for the mfa code then set up the variables in the aws credentials file, the duration is 4 hours.
 
-```bash
+```shell
 echo "enter mfa code:" && read code && session_output=$(aws sts get-session-token --duration-seconds 14400 --serial-number arn:aws:iam::${ACCOUNT_ID}:mfa/${USER_NAME} --profile ${USER_NAME} --token-code ${code} --output json)
 ```
 
-```bash
+```shell
 aws configure set profile.${PROJECT_NAME}_session.aws_access_key_id `echo "${session_output}" | jq --raw-output ".Credentials[\"AccessKeyId\"]"`
 aws configure set profile.${PROJECT_NAME}_session.aws_secret_access_key `echo "${session_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]"`
 aws configure set profile.${PROJECT_NAME}_session.aws_session_token `echo "${session_output}" | jq --raw-output ".Credentials[\"SessionToken\"]"`
@@ -115,11 +115,11 @@ aws configure set profile.${PROJECT_NAME}_session.aws_session_token `echo "${ses
 
 This will set up the variables. The AWS settings allow only one hour for the assume role, the parameter is set up there for the maximum value to remind me for it.
 
-```bash
+```shell
 role_output=$(aws sts assume-role --duration-seconds 3600 --profile ${PROJECT_NAME}_session --role-arn arn:aws:iam::${ACCOUNT_ID}:role/${PROJECT_NAME} --role-session-name "${PROJECT_NAME}_terraform" --output json)
 ```
 
-```bash
+```shell
 aws configure set profile.${PROJECT_NAME}_terraform.aws_access_key_id `echo "${role_output}" | jq --raw-output ".Credentials[\"AccessKeyId\"]"`
 aws configure set profile.${PROJECT_NAME}_terraform.aws_secret_access_key `echo "${role_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]"`
 aws configure set profile.${PROJECT_NAME}_terraform.aws_session_token `echo "${role_output}" | jq --raw-output ".Credentials[\"SessionToken\"]"`
@@ -129,7 +129,7 @@ A better solution will be to set up external credentials process with a custom s
 
 To test the credentials it's good to list the contents of the bucket which holds the statefile:
 
-```bash
+```shell
 aws s3 ls --profile ${PROJECT_NAME}_terraform ${TERRAFORM_BUCKET_NAME}/statefile/${PROJECT_NAME}
 ```
 

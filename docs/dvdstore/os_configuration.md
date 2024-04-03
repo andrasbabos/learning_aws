@@ -1,1 +1,3 @@
-sudo amazon-linux-extras -y install ansible2
+# OS configuration
+
+This part isn't implemented, documented.

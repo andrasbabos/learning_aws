@@ -1,7 +1,5 @@
 # DVD Store project documentation
 
-## general information
-
 This project is based on the Dell DVDStore application (<https://github.com/dvdstore/ds3>), it's purpose is to learn about AWS by installing the fictional company's web application like on premises then  migrate, rebuild it in a cloud aware way.
 
 This project isn't planned to be AWS free tier compatible and tested in European regions (eu-north-1).
