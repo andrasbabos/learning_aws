@@ -1,0 +1,13 @@
+site_name: My AWS learning projects
+site_url: https://learning-aws.andrasb.link
+markdown_extensions:
+  - toc:
+      toc_depth: 2
+theme:
+  name: material
+  features:
+    - toc.integrate
+  palette:
+    primary: indigo
+nav:
+  - 'start': 'index.md'
