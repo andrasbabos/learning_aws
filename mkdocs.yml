@@ -16,8 +16,5 @@ nav:
     - 'iam': 'general/iam.md'
     - 'terraform': 'general/terraform.md'
     - 'cloudtrail': 'general/cloudtrail.md'
-  - 'dvdstore':
-    - 'information': 'dvdstore/information.md'
-    - 'vpc, networking': 'dvdstore/vpc.md'
-    - 'ec2': 'dvdstore/ec2.md'
-    - 'OS configuration': 'dvdstore/os_configuration.md'
+  - 'static page':
+    - 'general description': 'static_page/general.md'
